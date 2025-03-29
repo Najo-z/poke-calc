@@ -53,6 +53,11 @@ def rate(_pokemon: str) -> int:
     species_nb = pokemon(_pokemon)["species"]["name"]
     return species(species_nb)["capture_rate"]
 
+@cache
+def poketypes(_pokemon: str) -> list[str]:
+    _pokemon = clean_name(_pokemon)
+    types = [_type["type"]["name"] for _type in pokemon(_pokemon)["types"]]
+    return types
 
 print("Getting all data...")
 get_all("pokemon-species")

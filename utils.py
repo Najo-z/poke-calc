@@ -101,20 +101,20 @@ def get_ball_rate(ball: str, pokemon_info: dict[str, Any]) -> float:
             else:
                 return 1.0
         case "netball":
-            types = pokemon_info.get("types", [])
-            return 3.5 if "Bug" in types or "Water" in types else 1.0
+            types = [_type["type"]["name"] for _type in pokemon_info["types"]]
+            return 3.5 if "bug" in types or "water" in types else 1.0
         case "premierball":
             return 1.0  # Visual effect, no catch rate bonus
         case "quickball":
-            return 5.0 if pokemon_info.get("turn", 1) == 1 else 1.0
+            return 5.0
         case "repeatball":
             return 3.5 if pokemon_info.get("previously_caught", False) else 1.0
         case "safariball":
             biome = pokemon_info.get("biome", "")
             return 1.5 if biome in ["Plains", "Savanna"] else 1.0
         case "sportball":
-            types = pokemon_info.get("types", [])
-            return 1.5 if "Bug" in types else 1.0
+            types = [_type["type"]["name"] for _type in pokemon_info["types"]]
+            return 1.5 if "bug" in types else 1.0
         case "timerball":
             turn = pokemon_info.get("turn", 1)
             return min(4.0, (1 + turn * 0.3))

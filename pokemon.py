@@ -1,10 +1,41 @@
 import tkinter as tk
 from tkinter import ttk
 
-from api import pokemon, pokemon_names, rate
+from api import pokemon, pokemon_names, rate, poketypes
 from utils import get_ball_rate, get_capture_rate, get_status_rate
 
-pokeball_types = ["Pokeball", "Ultraball", "Dreamball"]
+pokeball_types = [
+    "beastball",
+    "cherishball", "gsball", "pokeball", "ancientpokeball",
+    "diveball",
+    "dreamball",
+    "duskball",
+    "fastball",
+    "featherball",
+    "friendball",
+    "gigatonball",
+    "greatball", "ancientgreatball",
+    "healball",
+    "heavyball", "ancientheavyball",
+    "jetball",
+    "leadenball",
+    "levelball",
+    "loveball",
+    "lureball",
+    "luxuryball",
+    "masterball", "originball", "parkball",
+    "moonball",
+    "nestball",
+    "netball",
+    "premierball",
+    "quickball",
+    "repeatball",
+    "safariball",
+    "sportball",
+    "timerball",
+    "ultraball", "ancientultraball",
+    "wingball"
+]
 
 # Status variables
 FREEZE_STATUS = False
@@ -112,18 +143,23 @@ class App:
         self.pokemon_var.set(SELECTED_POKEMON)
         self.pokemon_combo.bind("<<ComboboxSelected>>", self.on_pokemon_select)
         self.pokemon_combo.bind("<KeyRelease>", self.on_pokemon_key_release)
+        self.pokemon_combo.bind("<ButtonPress-3>", self.on_pokemon_right_click)
 
         # Pokeball selection frame with combobox
         pokeball_frame = ttk.LabelFrame(self.root, text="Select Pokeball")
         pokeball_frame.pack(fill="x", padx=10, pady=10)
 
         self.pokeball_combo = ttk.Combobox(
-            pokeball_frame, textvariable=self.pokeball_var, values=pokeball_types
+            pokeball_frame,
+            textvariable=self.pokeball_var,
+            values=pokeball_types
         )
         self.pokeball_combo.pack(fill="x", padx=5, pady=5)
         self.pokeball_var.set(SELECTED_POKEBALL)
         self.pokeball_combo.bind("<<ComboboxSelected>>", self.on_pokeball_select)
-
+        self.pokeball_combo.bind("<KeyRelease>", self.on_pokeball_key_release)
+        self.pokeball_combo.bind("<ButtonPress-3>", self.on_pokeball_right_click)
+        
         # Results frame for capture rate display
         result_frame = ttk.LabelFrame(self.root, text="Capture Rate")
         result_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -175,13 +211,12 @@ class App:
 
         if typed_text:
             filtered_options = [
-                poke for poke in pokemon_names if typed_text in poke.lower()
+                poke for poke in pokemon_names if poke.lower().startswith(typed_text) #START WITH not 'in'
             ]
             self.pokemon_combo.config(values=filtered_options)
         else:
             self.pokemon_combo.config(values=pokemon_names)
 
-        self.pokemon_combo.event_generate("<Down>")
 
         global SELECTED_POKEMON
         SELECTED_POKEMON = self.pokemon_var.get()
@@ -189,18 +224,46 @@ class App:
             return
         self.update_cap_rate()
 
+    # right click to see combo
+    def on_pokemon_right_click(self, event):
+        self.pokemon_combo.event_generate("<Down>")
+
+    def on_pokeball_key_release(self, event):
+        typed_text = self.pokeball_var.get().lower()
+
+        if typed_text:
+            filtered_options = [
+                pokeb for pokeb in pokeball_types if pokeb.lower().startswith(typed_text) #START WITH not 'in'
+            ]
+            self.pokeball_combo.config(values=filtered_options)
+        else:
+            self.pokeball_combo.config(values=pokeball_types)
+
+
+        global SELECTED_POKEBALL
+        SELECTED_POKEBALL = self.pokeball_var.get()
+        if SELECTED_POKEBALL not in pokeball_types:
+            return
+    
+    #Same as on_pokemon_right_click but for pokeballs
+    def on_pokeball_right_click(self, event):
+        self.pokeball_combo.event_generate("<Down>")
+
+
     def update_cap_rate(self):
         # Determine status for capture rate calculation
         status = ""
         if SLEEP_STATUS:
             status = "sleep"  # Both freeze and sleep use the same status modifier
         cap_rate = rate(SELECTED_POKEMON)
+        pokemon_types = poketypes(SELECTED_POKEMON)
         cap_rate_text = get_capture_rate(
             cap_rate=cap_rate,
             ball=get_ball_rate(
                 SELECTED_POKEBALL,
                 {
                     "status": status,
+                    "types": pokemon_types,
                     **pokemon(SELECTED_POKEMON),
                 },
             ),
@@ -216,7 +279,7 @@ class App:
         if display_val > 100:
             display_val = 100
         self.result_label.config(
-            text=f"Catch chance: {display_val}%\nCatch rate: {cap_rate}"
+            text=f"Catch chance: {display_val}%\nCatch rate: {cap_rate}\nPokemon Type(s):{pokemon_types}"
         )
 
 
